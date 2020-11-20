@@ -1,0 +1,11 @@
+{"xpath":
+        {
+          "img_link": "//div[@class=\"article_image_wrap\"]/figure/img/@src"
+        },
+  "regex":
+        {
+          "keywords": "<meta name=\"news_keywords\" content=\"(.*?)\">"
+        },
+  "json":
+        {}
+}

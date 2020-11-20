@@ -1,0 +1,8 @@
+{"xpath":
+    {"article_body" : "//div[@id=\"mainArea\"]/div/p/text()"
+    },
+  "regex":
+  {
+    "embedded_twitter_link": "<div class = \"embed\">(.*?)\\s*</div>"
+  }
+}
