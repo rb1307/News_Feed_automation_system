@@ -1,7 +1,9 @@
 """
-@Romit Bhattacharyya
-__main.py__. for aggregating and extracting of all the new articles from different news sources.
-
+encoding : utf-8
+*******************************************
+author : Romit Bhattacharyya
+gmail : rbhattacharyya1307@gmail.com
+*******************************************
 """
 
 
@@ -17,14 +19,14 @@ class DailyUpdates:
         parser = configargparse.ArgParser()
         parser.add_argument('-c', '--config', required=False, is_config_file=True, help='config file path')
         parser.add_argument('--storage_path', required=False, type=str,
-                            help='storage path for all TN daily updates file')
+                            help='storage path for all local daily updates file')
         parser.add_argument('--input_file', required=False, type=str,
                             help='Input file containing sources, ids, feed_ids etc. ')
         parser.add_argument('--db_connect', required=False, default=False, type=bool, help='Update to database')
         parser.add_argument('--run_aggr', required=False, type=bool,
                             help='Condition to run the rss fed aggregator {default: True}')
         parser.add_argument('--start_date', required=False, type=int,
-                            help='Last number of days\' news should be craped {default : 1}')
+                            help='Last number of days\' news should be scraped {default : 1}')
         parser.add_argument('--start_hour', required=False, type=int,
                             help='hoto starur of the day to scraping {default : 0}')
         parser.add_argument('--start_min', required=False, type=int,
@@ -40,6 +42,8 @@ class DailyUpdates:
         parser.add_argument('--source_id', required=False, type=str, help='list of sources to run DailyUpdates')
         parser.add_argument('--test', required=False, type=bool, default=False,  help='unit testing')
         self.params=parser.parse_args()
+        # argument --rss_url should alsways be accompanied by argument --source
+        # This can be changed to arparse line requirement
         if self.params.rss_url and not self.params.source_id:
             raise CustomErrors.ConfigError
         self.extracted_dbinstance = connect_db.extracted_dbinstance()
@@ -48,18 +52,16 @@ class DailyUpdates:
             connect_db.move_last_data(extractor_db=self.extracted_dbinstance, aggregator_db=self.aggregated_dbinstance)
 
     def run_aggregator(self):
-        """
-        :return: daily article links from rss feeds (type --> list of dictionaries)
-        """
         if not self.params.run_aggr:
+            # --run_aggr False : picks the latest aggregated files from local
             return 0
         else:
-            logging.info("Crawler initiated")
+            logging.info(" Generic crawler initiated.")
+
             kwargs ={'source_id': self.params.source_id, 'rss_url': self.params.rss_url, 'aggregator_limit':
-                    self.params.aggr_limit,
-                     'aggregator_limit_value': self.params.aggr_limit_value, 'timeline_start_date'
-                    : self.params.start_date, 'timeline_start_hour': self.params.start_hour,
-                     "db_connect": self.params.db_connect}
+                    self.params.aggr_limit, 'aggregator_limit_value': self.params.aggr_limit_value,
+                     'timeline_start_date': self.params.start_date, 'timeline_start_hour': self.params.start_hour,
+                     'timeline_start_min': self.params.start_min, "db_connect": self.params.db_connect}
             resp = RssFeedExtractor.getsourceobj(**kwargs)
             return resp
 
