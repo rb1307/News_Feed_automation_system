@@ -47,5 +47,3 @@ def move_last_data(extractor_db=None, aggregator_db=None, batch_id='001'):
     # previous data being moved into archive_db
     archive_db.update_many({}, {'$set': {'batch_id': date+'_'+ batch_id}})
     return 0
-
-
