@@ -1,3 +1,4 @@
+import connect_db
 from pymongo import MongoClient
 import json
 # import spacy
@@ -15,5 +16,14 @@ import operator
 from numpy import dot
 from numpy.linalg import norm
 nltk.download('stopwords')
+nltk.download('punkt')
+
+
+class NewsClusters:
+    def __init__(self):
+        self.extract_db = connect_db.extracted_dbinstance()
+
+
+
 
 

@@ -1,4 +1,4 @@
-from CommonFunctions import parserssfeedresponse, extractrssresponse
+from CommonFunctions import parserssfeedresponse, extractrssresponse, required_datetime
 import logging
 import connect_db
 logging.basicConfig(level=logging.INFO)
@@ -13,12 +13,15 @@ class RssFeedExtractor:
         self.input_db=connect_db.input_dbinstance()
         self.aggregated_db=connect_db.aggregated_dbinstance()
         self.values.update(kwargs)
-        if self.values.get("db_connect"):
-            logging.warning("Connecting to aggregated db.... clearing db data .")
-            self.aggregated_db.remove({})
+        # if self.values.get("db_connect"):
+        #    self.aggregated_db.remove({})
+        self.cutoff_datetime = required_datetime(no_of_days=self.values.get("timeline_start_date"),
+                                             hour_of_day=self.values.get("timeline_start_hour"),
+                                             minute_of_hour=self.values.get("timeline_start_min"))
 
     def getrssfeeds(self):
         feed_details = []
+        # CONDITION : test run with a single rss_url and source
         if self.values.get("rss_url", False):
             feed = (self.values.get("rss_url"))
             document = self.input_db.find_one({"feed": feed})
@@ -36,9 +39,7 @@ class RssFeedExtractor:
         for feed_details in inputfeeds:
             rss_response = parserssfeedresponse(feed=feed_details.get("feed"),
                                             feed_language=feed_details.get("newspaper_language"))
-            feed_response = extractrssresponse(response=rss_response,
-                                            timeline_start_date=self.values.get("timeline_start_date"),
-                                            timeline_start_hour=self.values.get("timeline_start_hour"))
+            feed_response = extractrssresponse(response=rss_response, cut_off_date=self.cutoff_datetime)
             logging.info("RSS Feed : " + str(feed_details.get("feed")) + ". Feed details extracted :\nMetadata : " +
                          str(feed_response.get("metadata")) +
                          "\nNumber of article links found within the extracted timeline :"
