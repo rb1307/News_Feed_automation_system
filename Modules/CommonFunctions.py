@@ -39,22 +39,19 @@ def parserssfeedresponse(feed=None, feed_language='en'):
         return response
 
 
-def extractrssresponse(response=None, timeline_start_date=1, timeline_start_hour=0):
+def extractrssresponse(response=None, cut_off_date=None):
     feed_data=response.get("feed", {})
     metadata = {'feed_title': feed_data.get("title", ''), 'response_language': feed_data.get('language', None)}
     stories = response.get("entries")
     article_links =[]
     for each_story in stories:
-        story_details ={}
+
         story_date_time = convertstrtodatetime(datetime_str=each_story.get("published"),
                                           date_time_format='%a, %d %b %Y %H:%M:%S +0530')
-        if checkifdatetime_within_timelinelimit(input_date_time=story_date_time,
-                                                timeline_days=timeline_start_date, timeline_hour=timeline_start_hour):
-            story_details['title'] = each_story.get("title", None)
-            story_details['published_date'] = str(story_date_time)
-            story_details['summary'] = each_story.get("summary", None)
-            story_details['article_body'] = each_story.get("story", None)
-            story_details['link']=each_story.get('link', '')
+        if checkifdatetime_within_timelinelimit(input_date_time=story_date_time, cut_off_datetime=cut_off_date):
+            story_details = {'title': each_story.get("title", None), 'published_date': str(story_date_time),
+                             'summary': each_story.get("summary", None), 'article_body': each_story.get("story", None),
+                             'link': each_story.get('link', '')}
             article_links.append(story_details)
         else:
             break
@@ -62,17 +59,15 @@ def extractrssresponse(response=None, timeline_start_date=1, timeline_start_hour
     return feed_details
 
 
-def checkifdatetime_within_timelinelimit(input_date_time=None, timeline_days=0, timeline_hour=0, timeline_min=0):
-    timeline_days = timedelta(days=timeline_days)
-    timeline= datetime.now().replace(hour=timeline_hour, minute=timeline_min)
-    date_time_limit = (timeline - timeline_days)
-    # logging.info("The cut off time for  is " + str(date_time_limit))
-    if input_date_time.replace(tzinfo=utc) >= date_time_limit.replace(tzinfo=utc):
+def checkifdatetime_within_timelinelimit(input_date_time=None, cut_off_datetime=None):
+    # timeline_days = timedelta(days=timeline_days)
+    # timeline= datetime.now().replace(hour=timeline_hour, minute=timeline_min)
+    # date_time_limit = (timeline - timeline_days)
+    datetime_limit = cut_off_datetime
+    if input_date_time.replace(tzinfo=utc) >= datetime_limit.replace(tzinfo=utc):
         return True
     else:
         return False
-
-# def get_cutoff_timeline(timeline_days=0, timeline_hour=0, timeline_min=0):
 
 
 def convertstrtodatetime(datetime_str='', date_time_format=None):
@@ -81,6 +76,10 @@ def convertstrtodatetime(datetime_str='', date_time_format=None):
     except Exception:
         published_date_time = datetime.strptime(datetime_str, date_time_format)
     return published_date_time
+
+
+def convertdatetimetostr(date_time=None):
+    return date_time
 
 
 def response_from_request(**kwargs):
@@ -140,10 +139,18 @@ def clean_article_body(body_list=None):
         return body_list
 
 
-def get_current_time_string():
+def get_current_datetime_string():
     current_date_time = datetime.now()
     date = current_date_time.strftime("%m/%d/%Y")
     time = current_date_time.strftime("%H:%M")
-    date_time = {"current_date": date, "current_time": time }
+    current_datetime = {"current_date": date, "current_time": time}
 
-    return date_time
+    return current_datetime
+
+
+def required_datetime(no_of_days=0, hour_of_day=0, minute_of_hour=0):
+    # no_of_days :: subtract the number of days of date.
+    days = timedelta(days=no_of_days)
+    timeline = datetime.now().replace(hour=hour_of_day, minute=minute_of_hour)
+    date_time_limit = (timeline - days)
+    return date_time_limit
