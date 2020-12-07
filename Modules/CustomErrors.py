@@ -2,7 +2,7 @@ INPUT_DATA_ERROR ='Failed to input data. Check file'
 STATUS_CODE_ERROR = 'Page data unable to retrieve.'
 EMPTYRSSFEED ="No Rss feed found for input sources."
 CONFIGINPUTERROR ='Configuration error.Rss url input without source id being specified.'
-
+COSVALUERROR = 'Failed to find cos value between the input variables :'
 
 class InputDataError(Exception):
     def __init__(self, message=INPUT_DATA_ERROR):
@@ -25,4 +25,11 @@ class NoRssFeed(Exception):
 class ConfigError(Exception):
     def __init__(self, message=CONFIGINPUTERROR):
         self.message=message
+        super().__init__(self.message)
+
+
+class CosValueError(Exception):
+    def __init__(self, message=COSVALUERROR):
+        # message = message + str(val1) + " , " + str(val2)
+        self.message = message
         super().__init__(self.message)
