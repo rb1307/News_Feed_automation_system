@@ -1,24 +1,26 @@
 import sys
 sys.path.append("..")
 import connect_db
-from News_clustering import c_functions
+import c_functions
+from CommonFunctions import get_current_datetime_string
 
 
 class NewsClusters:
     def __init__(self):
-        extract_db = connect_db.extracted_dbinstance()
-        self.last_batch_articles = extract_db.find({})
+        extract_db_instance = connect_db.extracted_dbinstance()
+        db_cursor = extract_db_instance.find({})
+        self.last_batch_articles = c_functions.getdocsfromdbcursor(cursor=db_cursor)
+        self.entity_instance = connect_db.entity_dbinstance()
         # self.number_of_articles = self.last_batch_articles.count()
 
     def similarity_matrix(self):
-        similarity_matrix = c_functions.generate_similarity_matrix(docs=self.last_batch_articles)
+        similarity_matrix = c_functions.generate_similarity_matrix(listofarticles=self.last_batch_articles)
         threshold = c_functions.generate_threshold(similarity_value_matrix=similarity_matrix)
         return similarity_matrix, threshold
 
-    def generate_clusters(self):
+    def generate_clusters_with_documentnos(self):
         clusters = []
         similarity_matrix, threshold = self.similarity_matrix()
-        # print(len(self.number_of_articles))
         number_of_articles = len(similarity_matrix)
         input_article = 0
         clustered_article_no = []
@@ -34,10 +36,21 @@ class NewsClusters:
             input_article = input_article + 1
         return clusters
 
+    def create_entities(self):
+        entity_no = 1
+        cluster_with_documentnos = self.generate_clusters_with_documentnos()
+        total_no_of_entities_today = len(cluster_with_documentnos)
+        for item in range(total_no_of_entities_today):
+            entity = c_functions.entity_content(cluster_docnos=cluster_with_documentnos[item],
+                                      db_collection=self.last_batch_articles, number=entity_no)
+            self.entity_instance.insert_one(entity)
+
+        return 0
+
 
 def getresponse():
     obj = NewsClusters()
-    obj.generate_clusters()
+    obj.create_entities()
 
 
 getresponse()
