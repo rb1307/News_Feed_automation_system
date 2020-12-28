@@ -9,15 +9,22 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from CustomErrors import CosValueError
 import math
+from CommonFunctions import get_current_datetime_string
 # nltk.download('stopwords')
 # nltk.download('punkt')
 
 
 en_stopwords = set(stopwords.words('english'))
 
+"""def get_last_batch_articles(db=None):
+    resp =[]
+    numberofdocuments = db.find({})
+    for doc in db:
+        resp.append(doc)"""
 
-def generate_similarity_matrix(docs=None):
-    tf_idf_matrix, stories = generate_tfidf_matrix(docs=docs)
+
+def generate_similarity_matrix(listofarticles=None):
+    tf_idf_matrix, stories = generate_tfidf_matrix(articles=listofarticles)
     t_docs=(len(tf_idf_matrix))
     all_similarity_matrix=[]
     for query in range(t_docs):
@@ -33,9 +40,9 @@ def generate_similarity_matrix(docs=None):
 
 
 # creates a 2D matrix of tf_idf values for each doc
-def generate_tfidf_matrix(docs=None):
-    tf_values, corpus_words = generate_tf_eachdoc(docs=docs)
-    unique_corpus_words, idf_matrix = generate_idf_values(docs=docs, word_list=corpus_words)
+def generate_tfidf_matrix(articles=None):
+    tf_values, corpus_words = generate_tf_eachdoc(docs=articles)
+    unique_corpus_words, idf_matrix = generate_idf_values(docs=articles, word_list=corpus_words)
     document_values = tfidf_docvalues(tf_values=tf_values, idf_matrix=idf_matrix)
     tf_idf_matrix = []
     for doc_id, tf_idf in document_values.items():
@@ -81,7 +88,7 @@ def generate_idf_values(word_list=None, docs=None):
     unique_corpus_words = list(wordswiththeirfrequencies.keys())
     idf = {}
     for key, value in wordswiththeirfrequencies.items():
-        val = round(float(docs.count() / value), 5)
+        val = round(float(len(docs) / value), 5)
         idf[key] = val
     return unique_corpus_words, idf
 
@@ -184,3 +191,36 @@ def similar_docs(doc_no=None, similarity_matrix=None, threshold=0.0, cluster=Non
         print(e)
 
 
+def entity_content(cluster_docnos=[], db_collection=None, number=None):
+    # number_of_news_in_cluster = db_collection.count()
+    current_calender_date = get_current_datetime_string().get("current_date")
+    entity_id = current_calender_date + "_" + create_entity_id(number=number)
+    news_list = []
+    for item in cluster_docnos:
+        news_list.append(db_collection[item])
+    # HAVE TO REPLACE WITH THE MOST CREDIBLE NEWSPAPER OPTIONS
+    entity_title = news_list[0].get("title")
+    entity_details = {'Eid': entity_id, 'Content': news_list,
+                      'Title': entity_title}
+
+    return entity_details
+
+
+def create_entity_id(number=None):
+    calender_date = get_current_datetime_string().get("current_date", None)
+    # number_of_padded_zeroes = return_number_padded_zeroes(length_of_number=len(str(number)))
+    entity_no = str(number).rjust(numberof_padded_zeroes(length_of_number=len(str(number))), '0')
+    entity_id = calender_date + "_" + entity_no
+    return entity_id
+
+
+def numberof_padded_zeroes(length_of_number=None):
+    number_of_padded_zeroes = 4 - length_of_number
+    return number_of_padded_zeroes
+
+
+def getdocsfromdbcursor(cursor=None):
+    articles = []
+    for items in cursor:
+        articles.append(items)
+    return articles
