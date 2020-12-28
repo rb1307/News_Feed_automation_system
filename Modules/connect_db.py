@@ -30,6 +30,11 @@ def archive_dbinstance():
     return archive_db
 
 
+def entity_dbinstance():
+    entity_db = client_cluster['NFA_system']['entity_data']
+    return entity_db
+
+
 def move_last_data(extractor_db=None, aggregator_db=None, batch_id='001'):
     archive_db = archive_dbinstance()
     logging.info("Connecting to Mongodb cluster.\n\tDatabase : NFA_system \n\tCollections : aggregated_db\n"
