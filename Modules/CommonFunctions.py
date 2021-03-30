@@ -11,25 +11,21 @@ from requests.packages.urllib3.util.retry import Retry
 utc = pytz.UTC
 HEADERS= {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
         ' Chrome/77.0.3865.90 Safari/537.36'}
-
-
-"""
-def geturlresponse(input_url=None, request_type='get'):
-    url_details = {'url': input_url, 'request_type': request_type}
-    url_response = response_from_request(**url_details)
-    return url_response
-
-"""
+default_date_time_format = '%a, %d %b %Y %H:%M:%S +0530'
 
 
 def parserssfeedresponse(feed=None, feed_language='en'):
+    """
+    :param feed: type-->dictionary ; rss urls with inpur details such as soure id , rss_id etc.
+    :param feed_language: default = english;
+    :return: raw xml response is parsed into a dictionary and returned.
+    """
     if feed_language=='en':
         response = dict(feedparser.parse(feed))
-        response_statuscode = response.get('status')
-        if response_statuscode != 200:
+        if response.get('status') != 200:
             logging.warning("Feed :" + str(feed) + ". Error in retrieving data using feedparser due to status code " +
-                         str(response_statuscode) + ". Check link")
-            dummy_response = {'status': response_statuscode, 'entries': [], feed: response.get('feed')}
+                         str(response.get('status')) + ". Check link")
+            dummy_response = create_dummy_response(response=response)
             return dummy_response
         else:
             return response
@@ -39,15 +35,31 @@ def parserssfeedresponse(feed=None, feed_language='en'):
         return response
 
 
+def create_dummy_response(response=None):
+    """
+    :param response: all response from rss urls that do not have status code 200
+    :return: dummy response with emtry entry list and metadata
+    """
+    entries = []
+    feeds = response.get('feed')
+    status_code = response.get('status')
+    dummy_response = {'entries': entries, 'status': status_code, 'feed': feeds}
+    return dummy_response
+
+
 def extractrssresponse(response=None, cut_off_date=None):
+    """
+    :param response: parsed xml rss response
+    :param cut_off_date: The new link after a specific time of a date
+    :return: type-->dictionary ; metadata and all story links before the cut off date
+    """
     feed_data=response.get("feed", {})
     metadata = {'feed_title': feed_data.get("title", ''), 'response_language': feed_data.get('language', None)}
     stories = response.get("entries")
     article_links =[]
     for each_story in stories:
-
         story_date_time = convertstrtodatetime(datetime_str=each_story.get("published"),
-                                          date_time_format='%a, %d %b %Y %H:%M:%S +0530')
+                                          date_time_format=default_date_time_format)
         if checkifdatetime_within_timelinelimit(input_date_time=story_date_time, cut_off_datetime=cut_off_date):
             story_details = {'title': each_story.get("title", None), 'published_date': str(story_date_time),
                              'summary': each_story.get("summary", None), 'article_body': each_story.get("story", None),
@@ -59,23 +71,25 @@ def extractrssresponse(response=None, cut_off_date=None):
     return feed_details
 
 
+def convertstrtodatetime(datetime_str='', date_time_format=None):
+    """
+    :param datetime_str:
+    :param date_time_format:
+    :return:
+    """
+    try:
+        published_date_time =dateutil.parser.parse(datetime_str)
+    except Exception as e:
+        published_date_time = datetime.strptime(datetime_str, date_time_format)
+    return published_date_time
+
+
 def checkifdatetime_within_timelinelimit(input_date_time=None, cut_off_datetime=None):
-    # timeline_days = timedelta(days=timeline_days)
-    # timeline= datetime.now().replace(hour=timeline_hour, minute=timeline_min)
-    # date_time_limit = (timeline - timeline_days)
     datetime_limit = cut_off_datetime
     if input_date_time.replace(tzinfo=utc) >= datetime_limit.replace(tzinfo=utc):
         return True
     else:
         return False
-
-
-def convertstrtodatetime(datetime_str='', date_time_format=None):
-    try:
-        published_date_time =dateutil.parser.parse(datetime_str)
-    except Exception:
-        published_date_time = datetime.strptime(datetime_str, date_time_format)
-    return published_date_time
 
 
 def convertdatetimetostr(date_time=None):
@@ -129,8 +143,16 @@ def create_dummy_response(response_code=None, error=None):
     dummy_response = Response()
     dummy_response.status_code = response_code
     dummy_response.error_type=error
-    print("****")
     return dummy_response
+
+
+def check_for_testing_flag(is_test=None):
+    if is_test =='True':
+        return True
+    else:
+        return False
+
+
 
 
 def clean_article_body(body_list=None):

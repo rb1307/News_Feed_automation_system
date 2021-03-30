@@ -1,4 +1,4 @@
-from CommonFunctions import parserssfeedresponse, extractrssresponse, required_datetime
+from CommonFunctions import parserssfeedresponse, extractrssresponse, required_datetime, check_for_testing_flag
 import logging
 import connect_db
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,8 @@ class RssFeedExtractor:
     def getrssfeeds(self):
         feed_details = []
         # CONDITION : test run with a single rss_url and source
-        if self.values.get("rss_url", False):
+        testing_flag = check_for_testing_flag(is_test=self.values.get('is_test'))
+        if testing_flag:
             feed = (self.values.get("rss_url"))
             document = self.input_db.find_one({"feed": feed})
             feed_details.append(document)

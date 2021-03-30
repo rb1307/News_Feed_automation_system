@@ -1,8 +1,8 @@
 import sys
 sys.path.append("..")
 import connect_db
-import c_functions
-from CommonFunctions import get_current_datetime_string
+from News_clustering import c_functions
+# from CommonFunctions import get_current_datetime_string
 
 
 class NewsClusters:
@@ -19,6 +19,10 @@ class NewsClusters:
         return similarity_matrix, threshold
 
     def generate_clusters_with_documentnos(self):
+        """
+        :return: a list of lists. Each nested list is an entity that contains the document nos
+                that have been clustered together. --> [[23],[1,6,88],[45,33] ....]
+        """
         clusters = []
         similarity_matrix, threshold = self.similarity_matrix()
         number_of_articles = len(similarity_matrix)
@@ -37,6 +41,10 @@ class NewsClusters:
         return clusters
 
     def create_entities(self):
+        """
+        updates the mongo db directly in the "entity_data" db entity wise
+
+        """
         entity_no = 1
         cluster_with_documentnos = self.generate_clusters_with_documentnos()
         total_no_of_entities_today = len(cluster_with_documentnos)
@@ -44,6 +52,7 @@ class NewsClusters:
             entity = c_functions.entity_content(cluster_docnos=cluster_with_documentnos[item],
                                       db_collection=self.last_batch_articles, number=entity_no)
             self.entity_instance.insert_one(entity)
+            entity_no += 1
 
         return 0
 

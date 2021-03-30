@@ -1,8 +1,9 @@
 INPUT_DATA_ERROR ='Failed to input data. Check file'
 STATUS_CODE_ERROR = 'Page data unable to retrieve.'
 EMPTYRSSFEED ="No Rss feed found for input sources."
-CONFIGINPUTERROR ='Configuration error.Rss url input without source id being specified.'
+CONFIGINPUTERROR ='Configuration error.Testing without rss_url and source_id mentioned.'
 COSVALUERROR = 'Failed to find cos value between the input variables :'
+
 
 class InputDataError(Exception):
     def __init__(self, message=INPUT_DATA_ERROR):

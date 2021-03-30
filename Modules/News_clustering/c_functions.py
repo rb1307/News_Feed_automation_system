@@ -152,16 +152,20 @@ def cosine_similarity(doc1=[], doc2=[]):
         cos_sim = round(dot(doc1, doc2) / (norm(doc1) * norm(doc2)), 6)
         return cos_sim
     except Exception:
+        print(norm(doc1))
+        print(norm(doc2))
         raise CosValueError()
 
 
 # calculate the threshold for document similarity
 def generate_threshold(similarity_value_matrix=[]):
-    all_values = [item for sublist in similarity_value_matrix for item in sublist]
+    # all_values = [item for sublist in similarity_value_matrix for item in sublist]
+    all_values = similarity_value_matrix[0]
     all_values = replacenanvalues(data=all_values, replaced_value=0)
     average_similarity_score = float(sum(all_values)/len(all_values))
     standard_deviation = statistics.pstdev(all_values)
     threshold = average_similarity_score + (1.25*standard_deviation)
+    print(threshold)
     return threshold
 
 
@@ -194,13 +198,15 @@ def similar_docs(doc_no=None, similarity_matrix=None, threshold=0.0, cluster=Non
 def entity_content(cluster_docnos=[], db_collection=None, number=None):
     # number_of_news_in_cluster = db_collection.count()
     current_calender_date = get_current_datetime_string().get("current_date")
-    entity_id = current_calender_date + "_" + create_entity_id(number=number)
+    entity_id = create_entity_id(number=number)
     news_list = []
     for item in cluster_docnos:
+        # news_item = db_collection[item]
+        # news_item = delete_key_value(dictionary=news_item, key=['article'])
         news_list.append(db_collection[item])
     # HAVE TO REPLACE WITH THE MOST CREDIBLE NEWSPAPER OPTIONS
     entity_title = news_list[0].get("title")
-    entity_details = {'Eid': entity_id, 'Content': news_list,
+    entity_details = {'Eid': entity_id, 'Entity Content': news_list,
                       'Title': entity_title}
 
     return entity_details
@@ -224,3 +230,8 @@ def getdocsfromdbcursor(cursor=None):
     for items in cursor:
         articles.append(items)
     return articles
+
+
+def delete_key_value(dictionary = {}, key=None):
+    del dictionary[key]
+    return dictionary
