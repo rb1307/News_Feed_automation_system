@@ -1,3 +1,13 @@
+"""
+*******************************************
+author : Romit Bhattacharyya
+gmail : rbhattacharyya1307@gmail.com
+*******************************************to extract the
+Module is used to parse the rss feeds of different news websites to get the various component of news
+e.g link, article body, tags, image etc.
+"""
+
+
 from CommonFunctions import parserssfeedresponse, extractrssresponse, required_datetime, check_for_testing_flag
 import logging
 import connect_db
@@ -41,10 +51,10 @@ class RssFeedExtractor:
             rss_response = parserssfeedresponse(feed=feed_details.get("feed"),
                                             feed_language=feed_details.get("newspaper_language"))
             feed_response = extractrssresponse(response=rss_response, cut_off_date=self.cutoff_datetime)
-            logging.info("RSS Feed : " + str(feed_details.get("feed")) + ". Feed details extracted :\nMetadata : " +
+            """logging.info("RSS Feed : " + str(feed_details.get("feed")) + ". Feed details extracted :\nMetadata : " +
                          str(feed_response.get("metadata")) +
                          "\nNumber of article links found within the extracted timeline :"
-                         + str(len(feed_response.get("article_links"))) + "\n\n")
+                         + str(len(feed_response.get("article_links"))) + "\n\n")"""
             feed_details.update(feed_response)
             article_links.append(feed_details)
             if self.values.get("db_connect"):
