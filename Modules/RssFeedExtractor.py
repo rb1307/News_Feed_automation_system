@@ -50,12 +50,12 @@ class RssFeedExtractor:
         for feed_details in inputfeeds:
             rss_response = parserssfeedresponse(feed=feed_details.get("feed"),
                                             feed_language=feed_details.get("newspaper_language"))
-            feed_response = extractrssresponse(response=rss_response, cut_off_date=self.cutoff_datetime)
+            feed_data = extractrssresponse(response=rss_response, cut_off_date=self.cutoff_datetime)
             """logging.info("RSS Feed : " + str(feed_details.get("feed")) + ". Feed details extracted :\nMetadata : " +
                          str(feed_response.get("metadata")) +
                          "\nNumber of article links found within the extracted timeline :"
                          + str(len(feed_response.get("article_links"))) + "\n\n")"""
-            feed_details.update(feed_response)
+            feed_details.update(feed_data)
             article_links.append(feed_details)
             if self.values.get("db_connect"):
                 self.aggregated_db.insert_one(feed_details)
