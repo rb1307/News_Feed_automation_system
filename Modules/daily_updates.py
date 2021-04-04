@@ -19,13 +19,19 @@ class DailyUpdates:
         parser.add_argument('--DB', dest='DB', action='store_true', help='Connect to database')
         parser.add_argument('--no-DB', dest='DB', action='store_false', help='NO Connect to database')
         parser.add_argument('--aggregator', dest='aggregator', action='store_true', help='Run The Aggregator')
-        parser.add_argument('--no-aggregator', dest='aggregator', action='store_false', help='Do not run the aggregator')
-        parser.add_argument('--Test', required=False, help='Test run with a rss url')
-        parser.add_argument('--Days_to_subtract', type=int, required=True, help='')
-        parser.add_argument('--Hours_to_subtract', type=int, required=True, help='')
-        parser.add_argument('--Minutes_to_subtract', type=int, required=True, help='')
-        parser.add_argument('--rss_url', default=None, help='RSS urls to be tested.')
-        parser.add_argument('--source_id', default=None, help='When RSS url is tested, source_id has to be mentioned')
+        parser.add_argument('--no-aggregator', dest='aggregator', action='store_false',
+                            help='Do not run the aggregator')
+        parser.add_argument('-Test', default=False, help='Test run with a rss url')
+        # parser.add_argument('--no-Test', dest='Test', action='store_false', help='Test run with a rss url')
+        parser.add_argument('--Days', type=int, required=True, help='')
+        parser.add_argument('--Hours', type=int, required=True, help='')
+        parser.add_argument('--Minutes', type=int, required=True, help='')
+        parser.add_argument('-rss_url', default=None, help='RSS urls to be tested.')
+        parser.add_argument('-source_id', default=None, help='When RSS url is tested, source_id has to be mentioned')
+        parser.add_argument('--clustering', dest='clustering', action='store_true', help='Run Clustering')
+        parser.add_argument('--no-clustering', dest='clustering', action='store_false', help='Do not Run Clustering ')
+        parser.add_argument('-local', default=False, help='Store all data in Local Machine')
+
         self.params = parser.parse_args()
         # self.params.db_connect=False
         # argument --rss_url should alsways be accompanied by argument --source_id
@@ -47,32 +53,27 @@ class DailyUpdates:
             # db_cursor = self.aggregated_dbinstance.find({})
             return 0
         else:"""
-        logging.info(" Generic crawler initiated.")
         kwargs = {'is_test': self.params.Test,
                   'source_id': self.params.source_id,
                   'rss_url': self.params.rss_url,
                   'aggregator_limit': 0,
                   'aggregator_limit_value': 0,
-                  'timeline_start_date': self.params.Days_to_subtract,
-                  'timeline_start_hour': self.params.Hours_to_subtract,
-                  'timeline_start_min': self.params.Minutes_to_subtract,
+                  'timeline_start_date': self.params.Days,
+                  'timeline_start_hour': self.params.Hours,
+                  'timeline_start_min': self.params.Minutes,
                   "db_connect": self.params.DB}
         resp = RssFeedExtractor.getsourceobj(**kwargs)
         return resp
 
     def run_extractor(self):
-        """
-        :return:
-        """
-        logging.info("Extractor initiated.")
+        # running the aggregator fucntion for new data
         if self.params.aggregator:
             aggregated_data = self.run_aggregator()
-
+        # picking the already aggregated data from db.
         else:
-            logging.warning("\tAggregator Flag down.")
-            logging.warning("\tRetrieving aggregated data from the db.")
+            # logging.warning("\tAggregator Flag down.")
+            # logging.warning("\tRetrieving aggregated data from the db.")
             aggregated_data = self.aggregated_dbinstance.find({})
-        logging.warning("\tDB connect is disabled")
         for docs in aggregated_data:
             try:
                 module_name = docs.get("source_id") + "_plugin"
