@@ -5,9 +5,8 @@ import logging
 
 username, password = InputMethods.getdb_credentials(path='/home/hp/NFA-System/Modules/',
                                                     file_name='mongodb_credentials.json')
-
-client_cluster =MongoClient("mongodb+srv://"+username+":"+password+
-                     "@cluster0.d8xlm.mongodb.net/<dbname>?retryWrites=true&w=majority")
+client_cluster = MongoClient("mongodb+srv://" + username + ":" + password +
+                             "@cluster0.d8xlm.mongodb.net/<dbname>?retryWrites=true&w=majority")
 
 
 def input_dbinstance():
@@ -16,7 +15,7 @@ def input_dbinstance():
 
 
 def aggregated_dbinstance():
-    aggrg_db=client_cluster['NFA_system']['aggregated_data']
+    aggrg_db = client_cluster['NFA_system']['aggregated_data']
     return aggrg_db
 
 
@@ -35,7 +34,14 @@ def entity_dbinstance():
     return entity_db
 
 
-def move_last_data(extractor_db=None, aggregator_db=None, batch_id='001'):
+def move_last_data(extractor_db=None, aggregator_db=None):
+    """
+
+    :param extractor_db:
+    :param aggregator_db:
+    :return:
+    """
+    batch_id = '001' # need to correct this
     archive_db = archive_dbinstance()
     logging.info("Connecting to Mongodb cluster.\n\tDatabase : NFA_system \n\tCollections : aggregated_db\n"
                  "Operation : Removing last aggregated news list")
@@ -44,11 +50,11 @@ def move_last_data(extractor_db=None, aggregator_db=None, batch_id='001'):
     datetime_string = CommonFunctions.get_current_datetime_string()
     date = datetime_string.get("current_date")
     no_extracted_docs_latest = latest_docs.count()
-    if no_extracted_docs_latest> 0:
-        logging.info(str(no_extracted_docs_latest)+ " stories found in the extractor db. Moving them to news archive.")
+    if no_extracted_docs_latest > 0:
+        logging.info(str(no_extracted_docs_latest) + " stories found in the extractor db. Moving them to news archive.")
         archive_db.insert_many(latest_docs)
         logging.warning("Cleaning the extractor_db")
         extractor_db.remove({})
     # previous data being moved into archive_db
-    archive_db.update_many({}, {'$set': {'batch_id': date+'_'+ batch_id}})
+    archive_db.update_many({}, {'$set': {'batch_id': date + '_' + batch_id}})
     return 0
