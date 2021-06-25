@@ -20,8 +20,9 @@ sources = ['Business Standard', 'Livemint', 'Times of India', 'The Hindu',
 class RssFeedExtractor:
     def __init__(self, **kwargs):
         self.values = {}
-        self.input_db=connect_db.input_dbinstance()
-        self.aggregated_db=connect_db.aggregated_dbinstance()
+        database = self.values.get("DB_Name")
+        self.input_db = connect_db.input_dbinstance(collection_name=database)
+        self.aggregated_db = connect_db.aggregated_dbinstance(collection_name=database)
         self.values.update(kwargs)
         # if self.values.get("db_connect"):
         #    self.aggregated_db.remove({})
