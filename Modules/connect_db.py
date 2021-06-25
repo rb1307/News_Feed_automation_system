@@ -1,42 +1,43 @@
-import InputMethods
+from  Modules import InputMethods
 from pymongo import MongoClient
-import CommonFunctions
+from Modules import CommonFunctions
 import logging
 
-username, password = InputMethods.getdb_credentials(path='/home/hp/NFA-System/Modules/',
-                                                    file_name='mongodb_credentials.json')
+DATABASE_NAME = 'Samagra-Patrika'
+
+username, password = InputMethods.get_db_credentials(path='/home/rb1307/Samagra Patrika',
+                                                     file_name='mongodb_credentials.json')
 client_cluster = MongoClient("mongodb+srv://" + username + ":" + password +
-                             "@cluster0.d8xlm.mongodb.net/<dbname>?retryWrites=true&w=majority")
+                             "@cluster0.hjuda.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 
 
-def input_dbinstance():
-    input_db = client_cluster['NFA_system']['input_db']
+def input_dbinstance(collection_name=None):
+    input_db = client_cluster[DATABASE_NAME][collection_name]
     return input_db
 
 
-def aggregated_dbinstance():
-    aggrg_db = client_cluster['NFA_system']['aggregated_data']
-    return aggrg_db
+def aggregated_dbinstance(collection_name=None):
+    aggregate_db = client_cluster[DATABASE_NAME][collection_name]
+    return aggregate_db
 
 
-def extracted_dbinstance():
-    extr_db = client_cluster['NFA_system']['extracted_data']
+def extracted_dbinstance(collection_name=None):
+    extr_db = client_cluster[DATABASE_NAME][collection_name]
     return extr_db
 
 
-def archive_dbinstance():
-    archive_db = client_cluster['NFA_system']['news_archive']
+def archive_dbinstance(collection_name=None):
+    archive_db = client_cluster[DATABASE_NAME][collection_name]
     return archive_db
 
 
-def entity_dbinstance():
-    entity_db = client_cluster['NFA_system']['entity_data']
+def entity_dbinstance(collection_name=None):
+    entity_db = client_cluster[DATABASE_NAME][collection_name]
     return entity_db
 
 
 def move_last_data(extractor_db=None, aggregator_db=None):
     """
-
     :param extractor_db:
     :param aggregator_db:
     :return:
