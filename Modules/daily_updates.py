@@ -10,7 +10,8 @@ import RssFeedExtractor
 import CustomErrors
 import connect_db
 import logging
-import News_clustering
+import json
+from Modules import News_clustering
 
 
 class DailyUpdates:
@@ -18,6 +19,8 @@ class DailyUpdates:
         parser = configargparse.ArgParser(default_config_files=['configs.ini'])
         parser.add_argument('--DB', dest='DB', action='store_true', help='Connect to database')
         parser.add_argument('--no-DB', dest='DB', action='store_false', help='NO Connect to database')
+        # parser.add_argument('--DB_Name', type=str, required=True, help='Name of the db in mongo')
+        parser.add_argument('--account_name', type=str, required=True, help='')
         parser.add_argument('--aggregator', dest='aggregator', action='store_true', help='Run The Aggregator')
         parser.add_argument('--no-aggregator', dest='aggregator', action='store_false',
                             help='Do not run the aggregator')
@@ -33,19 +36,15 @@ class DailyUpdates:
         parser.add_argument('-local', default=False, help='Store all data in Local Machine')
 
         self.params = parser.parse_args()
-        # self.params.db_connect=False
-        # argument --rss_url should alsways be accompanied by argument --source_id
-        # This can be changed to arparse line requirement
+        # argument --rss_url should always be accompanied by argument --source_id
+        # This can be changed to argparse line requirement
         """if self.params.Test:
             if self.params.rss_url is None and self.params.source_id is None:
                 raise CustomErrors.ConfigError"""
-        self.extracted_dbinstance = connect_db.extracted_dbinstance()
-        self.aggregated_dbinstance = connect_db.aggregated_dbinstance()
-        # print(type(self.params.DB_connect))
-        if self.params.DB:
+        """if self.params.DB:
             connect_db.move_last_data(extractor_db=self.extracted_dbinstance, aggregator_db=self.aggregated_dbinstance)
         else:
-            logging.warning("\tNot connecting to db.")
+            logging.warning("\tNot connecting to db.")"""
 
     def run_aggregator(self):
         """if not self.params.aggregator:
@@ -61,19 +60,18 @@ class DailyUpdates:
                   'timeline_start_date': self.params.Days,
                   'timeline_start_hour': self.params.Hours,
                   'timeline_start_min': self.params.Minutes,
-                  "db_connect": self.params.DB}
-        resp = RssFeedExtractor.getsourceobj(**kwargs)
+                  "db_connect": self.params.account_name}
+        resp = RssFeedExtractor.get_source_obj(**kwargs)
         return resp
 
     def run_extractor(self):
-        # running the aggregator fucntion for new data
+        aggregated_data = []
         if self.params.aggregator:
             aggregated_data = self.run_aggregator()
-        # picking the already aggregated data from db.
         else:
-            # logging.warning("\tAggregator Flag down.")
-            # logging.warning("\tRetrieving aggregated data from the db.")
-            aggregated_data = self.aggregated_dbinstance.find({})
+            # CAPTURE DATA FROM LOCAL FILE
+            pass
+        extracted_data = []
         for docs in aggregated_data:
             try:
                 module_name = docs.get("source_id") + "_plugin"
@@ -85,13 +83,18 @@ class DailyUpdates:
                     kwargs = {'source_id': docs.get("source_id"), 'source': docs.get("source"),
                               "url": articles.get("link")}
                     articles.update(func.getsourceresponse(**kwargs))
-                    if self.params.DB:
-                        self.extracted_dbinstance.insert_one(articles)
+                    # print(articles)
+                    extracted_data.append(articles)
+                    """if self.params.DB:
+                        self.extracted_dbinstance.insert_one(articles)"""
 
             except Exception as e:
                 print(str(e))
-
-        return 0
+        output_file = open('test.json', 'w', encoding='utf-8')
+        for dic in extracted_data:
+            json.dump(dic, output_file)
+            output_file.write("\n")
+        return extracted_data
 
     def run_news_clustering(self):
         if self.params.run_aggr:
@@ -102,3 +105,4 @@ class DailyUpdates:
 
 obj = DailyUpdates()
 obj.run_extractor()
+
