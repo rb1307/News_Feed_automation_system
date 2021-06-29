@@ -4,7 +4,7 @@ from Modules.CustomErrors import *
 
 
 def input_excel(file_name=None, path=None):
-    # input_data = pd.DataFrame()
+    input_data = pd.DataFrame()
     absolute_path = path + "/" + file_name
     try:
         input_data = pd.read_excel(absolute_path)
@@ -15,7 +15,7 @@ def input_excel(file_name=None, path=None):
 
 
 def input_json(path=None, file_name=None):
-    file_name = path + file_name
+    file_name = path + '/' + file_name
     try:
         with open(file_name, mode='r') as f:
             data = json.load(f)
@@ -25,7 +25,7 @@ def input_json(path=None, file_name=None):
 
 
 def get_db_credentials(path=None, file_name=None):
-    file_name = path + '/'+file_name
+    file_name = path + '/' + file_name
     try:
         with open(file_name, mode='r') as f:
             data = json.load(f)
