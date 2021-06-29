@@ -1,5 +1,6 @@
 import feedparser
 import pytz
+import re
 import logging
 import requests
 import dateutil.parser
@@ -9,9 +10,9 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 utc = pytz.UTC
-HEADERS= {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
-        ' Chrome/77.0.3865.90 Safari/537.36'}
-default_date_time_format = '%a, %d %b %Y %H:%M:%S +0530'
+HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)'
+                         ' Chrome/77.0.3865.90 Safari/537.36'}
+default_date_time_format = '%a, %d %b %Y %H:%M:%S'
 
 
 def parserssfeedresponse(feed=None, feed_language='en'):
@@ -20,17 +21,17 @@ def parserssfeedresponse(feed=None, feed_language='en'):
     :param feed_language: default = english;
     :return: raw xml response is parsed into a dictionary and returned.
     """
-    if feed_language=='en':
+    if feed_language == 'en':
         response = dict(feedparser.parse(feed))
         if response.get('status') != 200:
             logging.warning("Feed :" + str(feed) + ". Error in retrieving data using feedparser due to status code " +
-                         str(response.get('status')) + ". Check link")
+                            str(response.get('status')) + ". Check link")
             dummy_response = create_dummy_response(response=response)
             return dummy_response
         else:
             return response
     else:
-        url_response=(response_from_request(**{'url': feed, 'request_type': 'get', 'headers': HEADERS})).text
+        url_response = (response_from_request(**{'url': feed, 'request_type': 'get', 'headers': HEADERS})).text
         response = dict(feedparser.parse(url_response))
         return response
 
@@ -53,13 +54,14 @@ def extractrssresponse(response=None, cut_off_date=None):
     :param cut_off_date: The new link after a specific time of a date
     :return: type-->dictionary ; metadata and all story links before the cut off date
     """
-    feed_data=response.get("feed", {})
+    feed_data = response.get("feed", {})
     metadata = {'feed_title': feed_data.get("title", ''), 'response_language': feed_data.get('language', None)}
     stories = response.get("entries")
-    article_links =[]
+    article_links = []
     for each_story in stories:
-        story_date_time = convertstrtodatetime(datetime_str=each_story.get("published"),
-                                          date_time_format=default_date_time_format)
+        story_timing = each_story.get("published").split("+")[0].strip()
+        story_date_time = convertstrtodatetime(datetime_str=story_timing,
+                                               date_time_format=default_date_time_format)
         if checkifdatetime_within_timelinelimit(input_date_time=story_date_time, cut_off_datetime=cut_off_date):
             story_details = {'title': each_story.get("title", None), 'published_date': str(story_date_time),
                              'summary': each_story.get("summary", None), 'article_body': each_story.get("story", None),
@@ -67,7 +69,7 @@ def extractrssresponse(response=None, cut_off_date=None):
             article_links.append(story_details)
         else:
             break
-    feed_details ={'metadata': metadata, 'article_links': article_links}
+    feed_details = {'metadata': metadata, 'article_links': article_links}
     return feed_details
 
 
@@ -78,7 +80,7 @@ def convertstrtodatetime(datetime_str='', date_time_format=None):
     :return:
     """
     try:
-        published_date_time =dateutil.parser.parse(datetime_str)
+        published_date_time = dateutil.parser.parse(datetime_str)
     except Exception as e:
         published_date_time = datetime.strptime(datetime_str, date_time_format)
     return published_date_time
@@ -97,14 +99,14 @@ def convertdatetimetostr(date_time=None):
 
 
 def response_from_request(**kwargs):
-    request_args={}
+    request_args = {}
     request_args.update(kwargs)
-    url_response=None
-    if request_args.get("request_type") =='get':
+    url_response = None
+    if request_args.get("request_type") == 'get':
         url_response = requests_retry().get(request_args.get("url", ''),
                                             params=request_args.get("payload", {}),
                                             headers=HEADERS)
-    elif request_args.get("request_type") =='post':
+    elif request_args.get("request_type") == 'post':
         pass
     if check_request_status_code(url=request_args.get("url"), response=url_response):
         return url_response
@@ -116,11 +118,11 @@ def response_from_request(**kwargs):
 def requests_retry(retries=3, back_off_factor=0.3,
                    status_forcelist=(500, 502, 504)):
     session = requests.Session()
-    retry=Retry(
+    retry = Retry(
         total=retries,
         read=retries,
         connect=retries,
-        redirect=retries-1,
+        redirect=retries - 1,
         backoff_factor=back_off_factor,
         status_forcelist=status_forcelist
     )
@@ -133,7 +135,7 @@ def requests_retry(retries=3, back_off_factor=0.3,
 def check_request_status_code(url=None, response=None):
     if response.status_code != requests.codes.ok:
         logging.warning("URL :" + str(url) + ". Error in retrieving data due to status code " +
-                     str(response.status_code) + ". Check url ")
+                        str(response.status_code) + ". Check url ")
         return False
     else:
         return True
@@ -142,23 +144,22 @@ def check_request_status_code(url=None, response=None):
 def create_dummy_response(response_code=None, error=None):
     dummy_response = Response()
     dummy_response.status_code = response_code
-    dummy_response.error_type=error
+    dummy_response.error_type = error
     return dummy_response
 
 
 def check_for_testing_flag(is_test=None):
-    if is_test =='True':
+    if is_test == 'True':
         return True
     else:
         return False
 
 
-
-
-def clean_article_body(body_list=None):
+def clean_article_body(body_list=[]):
     if type(body_list) is list:
         body_list = ''.join(body_list)
-        return body_list
+    body = re.sub("[^a-zA-Z' ]+", '', body_list)
+    return body
 
 
 def get_current_datetime_string():
