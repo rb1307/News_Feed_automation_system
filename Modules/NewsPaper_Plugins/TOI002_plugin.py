@@ -1,18 +1,18 @@
-from GenericCrawlerandExtractor import GCA
-from InputMethods import input_json
-from CommonFunctions import clean_article_body
+from Modules import GenericCrawlerandExtractor
+from Modules import InputMethods
+from Modules import CommonFunctions
 import json
 import re
 
-CONFIG_PATH = '/home/hp/NFA-System/Modules/NewsPaper_configs/'
+CONFIG_PATH = '/home/rb1307/Samagra Patrika/News_Feed_automation_system/Modules/NewsPaper_configs'
 CONFIG_FILE = 'configs_TOI.json'
 
 
-class TOI(GCA):
+class TOI(GenericCrawlerandExtractor.GCA):
     def __init__(self, **kwargs):
         self.source_configs = {}
         self.source_configs.update(kwargs)
-        config_data = input_json(path=CONFIG_PATH, file_name=CONFIG_FILE)
+        config_data = InputMethods.input_json(path=CONFIG_PATH, file_name=CONFIG_FILE)
         self.source_configs['extractor_configs'] = config_data
         super().__init__(**self.source_configs)
         self.xml_tree = super().convertresponsetoxmltree()
@@ -37,8 +37,10 @@ class TOI(GCA):
         for items in story_list:
             if items.get("tn") in ['text', 'keywoard']:
                 story.append(items.get("value"))
-        article_body = clean_article_body(body_list=story)
+        article_body = CommonFunctions.clean_article_body(body_list=story)
+
         return article_body
+
 
     def extractkeywords_json(self):
         article_id = self.getarticleidfromurl()
@@ -56,7 +58,7 @@ class TOI(GCA):
 
 def getsourceresponse(**kwargs):
     obj = TOI(**kwargs)
-    resp={'article_id': obj.getarticleidfromurl(), 'article_body': obj.extractarticlebody_json(),
+    resp={'article_id': obj.getarticleidfromurl(), 'article_body': obj.extractarticlebody_xml(),
           'provided_keywords': obj.extractkeywords_json(), 'image': obj.extractimagelink_json(),
           'source_id': kwargs.get("source_id")}
     return resp
