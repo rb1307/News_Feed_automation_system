@@ -11,7 +11,8 @@ import CustomErrors
 import connect_db
 import logging
 import json
-from Modules import News_clustering
+from Modules import InputMethods
+from News_clustering import clustering
 
 
 class DailyUpdates:
@@ -90,19 +91,25 @@ class DailyUpdates:
 
             except Exception as e:
                 print(str(e))
-        output_file = open('test.json', 'w', encoding='utf-8')
+        output_file = open('test_articles.json', 'w', encoding='utf-8')
+        output_file.write("[")
         for dic in extracted_data:
             json.dump(dic, output_file)
-            output_file.write("\n")
+            output_file.write(",\n")
+        output_file.write("]")
         return extracted_data
 
     def run_news_clustering(self):
-        if self.params.run_aggr:
-            self.run_extractor()
+        if self.params.aggregator:
+            x = self.run_extractor()
+            # run the aggregator or pick up from local directory - code to be written
         else:
-            News_clustering.clustering.getresponse()
 
+            x = InputMethods.input_json(path='/home/rb1307/Samagra Patrika/News_Feed_automation_system/Modules',
+                                        file_name='test_articles.json')
+            #print(x[0])
+        clustering.getresponse(extracted_data=x)
 
 obj = DailyUpdates()
-obj.run_extractor()
+obj.run_news_clustering()
 
