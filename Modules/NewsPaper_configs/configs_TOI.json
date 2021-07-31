@@ -1,4 +1,6 @@
-{"xpath":  {},
+{"xpath":  {
+      "article_body" : "//div[@class=\"_3YYSt clearfix  \"]//text()"
+            },
   "japth": {},
   "regex": {}
 }

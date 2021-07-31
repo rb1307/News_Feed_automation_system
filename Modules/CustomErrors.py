@@ -3,7 +3,7 @@ STATUS_CODE_ERROR = 'Page data unable to retrieve.'
 EMPTYRSSFEED ="No Rss feed found for input sources."
 CONFIGINPUTERROR ='Configuration error.Testing without rss_url and source_id mentioned.'
 COSVALUERROR = 'Failed to find cos value between the input variables :'
-
+SUMMARYGENERATIONERROR = 'Failed to generate summary. '
 
 class InputDataError(Exception):
     def __init__(self, message=INPUT_DATA_ERROR):
@@ -32,5 +32,11 @@ class ConfigError(Exception):
 class CosValueError(Exception):
     def __init__(self, message=COSVALUERROR):
         # message = message + str(val1) + " , " + str(val2)
+        self.message = message
+        super().__init__(self.message)
+
+
+class SummaryGenerationError(Exception):
+    def __init__(self, message=SUMMARYGENERATIONERROR):
         self.message = message
         super().__init__(self.message)

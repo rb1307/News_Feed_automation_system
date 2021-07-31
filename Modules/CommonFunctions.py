@@ -157,8 +157,8 @@ def check_for_testing_flag(is_test=None):
 
 def clean_article_body(body_list=[]):
     if type(body_list) is list:
-        body_list = ''.join(body_list)
-    body = re.sub("[^a-zA-Z' ]+", '', body_list)
+        body = ''.join(body_list)
+    body = re.sub("[^a-zA-Z0-9 _.,!' ]+", '', body)
     return body
 
 
