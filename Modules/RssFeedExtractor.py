@@ -24,15 +24,12 @@ class RssFeedExtractor:
         database = self.values.get("db_connect")
         self.input_db = connect_db.input_dbinstance(collection_name=database)
         self.aggregated_db = connect_db.aggregated_dbinstance(collection_name=database)
-        # if self.values.get("db_connect"):
-        #    self.aggregated_db.remove({})
         self.cutoff_datetime = required_datetime(no_of_days=self.values.get("timeline_start_date"),
                                                  hour_of_day=self.values.get("timeline_start_hour"),
                                                  minute_of_hour=self.values.get("timeline_start_min"))
 
     def get_rss_feeds(self):
         feed_details = []
-        # CONDITION : test run with a single rss_url and source
         testing_flag = check_for_testing_flag(is_test=self.values.get('is_test'))
         if testing_flag:
             feed = (self.values.get("rss_url"))
@@ -54,14 +51,11 @@ class RssFeedExtractor:
             feed_data = extractrssresponse(response=rss_response, cut_off_date=self.cutoff_datetime)
             feed_details.update(feed_data)
             article_links.append(feed_details)
-            """if self.values.get("db_connect"):
-                self.aggregated_db.insert_one(feed_details)"""
 
         return article_links
 
 
 def get_source_obj(**kwargs):
-    print(kwargs)
     obj = RssFeedExtractor(**kwargs)
     resp = obj.extract_article_links()
     return resp
